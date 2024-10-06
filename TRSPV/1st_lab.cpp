@@ -5,7 +5,7 @@
 using namespace std;
 
 // Функция для вычисления произведения элементов в одной из диагоналей
-double diagonal_product(double matrix[4][4], int diag) {
+static double diagonal_product(double matrix[4][4], int diag) {
     double product = 1.0;
     switch (diag) {
     case 0:  // Главная диагональ
@@ -37,7 +37,7 @@ double diagonal_product(double matrix[4][4], int diag) {
     return product;
 }
 
-int lab_1st(int argc, char** argv) {
+static int lab_1st(int argc, char** argv) {
     MPI_Init(&argc, &argv);
 
     int rank, size;

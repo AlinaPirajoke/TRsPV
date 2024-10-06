@@ -1,7 +1,4 @@
-﻿#include <mpi.h>
-#include <iostream>
-#include <vector>
-#include "1st_lab.cpp"
+﻿#include "1st_lab.cpp"
 
 using namespace std;
 const int CURRENT_LAB = 1;
