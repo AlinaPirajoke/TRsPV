@@ -5,36 +5,80 @@
 using namespace std;
 
 // Функция для вычисления произведения элементов в одной из диагоналей
-static double diagonal_product(double matrix[4][4], int diag) {
+static double diagonalProduct(double matrix[3][3], int i) {
     double product = 1.0;
-    switch (diag) {
-    case 0:  // Главная диагональ
-        for (int i = 0; i < 4; ++i) product *= matrix[i][i];
-        break;
-    case 1:  // Первая побочная диагональ
-        for (int i = 0; i < 4; ++i) product *= matrix[i][(i + 1) % 4];
-        break;
-    case 2:  // Вторая побочная диагональ
-        for (int i = 0; i < 4; ++i) product *= matrix[i][(i + 2) % 4];
-        break;
-    case 3:  // Третья побочная диагональ
-        for (int i = 0; i < 4; ++i) product *= matrix[i][(i + 3) % 4];
-        break;
-    case 4:  // Главная диагональ с отрицательными элементами
-        for (int i = 0; i < 4; ++i) product *= matrix[3 - i][i];
-        break;
-    case 5:  // Первая побочная диагональ с отрицательными элементами
-        for (int i = 0; i < 4; ++i) product *= matrix[3 - i][(i + 1) % 4];
-        break;
-    case 6:  // Вторая побочная диагональ с отрицательными элементами
-        for (int i = 0; i < 4; ++i) product *= matrix[3 - i][(i + 2) % 4];
-        break;
-    case 7:  // Третья побочная диагональ с отрицательными элементами
-        for (int i = 0; i < 4; ++i) product *= matrix[3 - i][(i + 3) % 4];
-        break;
+    if (i < 3) {
+        for (int j = 0; j < 3; ++j) product *= matrix[j][(i + j) % 3];
     }
-    cout << "Product " << diag << ": " << product << endl;
+    else {
+        for (int j = 0; j < 3; ++j) product *= matrix[2 - j][(i + j) % 3];
+        product *= -1;
+    }
     return product;
+}
+
+//  Я называю это кибер преступностью
+static double getDeterminant1(double m[4][4]) {
+    double k = m[0][0];
+    double determinant = 0.0;
+    double newMatrix[3][3] = {
+            {m[1][1], m[1][2], m[1][3]},
+            {m[2][1], m[2][2], m[2][3]},
+            {m[3][1], m[3][2], m[3][3]}
+    };
+
+    for (int i = 0; i < 6; i++) {
+        determinant += diagonalProduct(newMatrix, i);
+    }
+    determinant *= k;
+    return determinant;
+}
+
+static double getDeterminant2(double m[4][4]) {
+    double k = m[0][1];
+    double determinant = 0.0;
+    double newMatrix[3][3] = {
+            {m[1][0], m[1][2], m[1][3]},
+            {m[2][0], m[2][2], m[2][3]},
+            {m[3][0], m[3][2], m[3][3]}
+    };
+
+    for (int i = 0; i < 6; i++) {
+        determinant += diagonalProduct(newMatrix, i);
+    }
+    return determinant *= -1 * k;
+}
+
+static double getDeterminant3(double m[4][4]) {
+    double k = m[0][2];
+    double determinant = 0.0;
+    double newMatrix[3][3] = {
+            {m[1][0], m[1][1], m[1][3]},
+            {m[2][0], m[2][1], m[2][3]},
+            {m[3][0], m[3][1], m[3][3]}
+    };
+
+    for (int i = 0; i < 6; i++) {
+        determinant += diagonalProduct(newMatrix, i);
+    }
+    determinant *= k;
+    return determinant;
+}
+
+static double getDeterminant4(double m[4][4]) {
+    double k = m[0][0];
+    double determinant = 0.0;
+    double newMatrix[3][3] = {
+            {m[1][0], m[1][1], m[1][2]},
+            {m[2][0], m[2][1], m[2][2]},
+            {m[3][0], m[3][1], m[3][2]}
+    };
+
+    for (int i = 0; i < 6; i++) {
+        determinant += diagonalProduct(newMatrix, i);
+    }
+    determinant *= k;
+    return determinant;
 }
 
 static int lab_1st(int argc, char** argv) {
@@ -44,9 +88,9 @@ static int lab_1st(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    if (size != 9) {
+    if (size != 5) {
         if (rank == 0) {
-            cout << "This program requires 9 processes.\n";
+            cout << "This program requires 5 processes.\n";
         }
         MPI_Finalize();
         return 1;
@@ -60,24 +104,39 @@ static int lab_1st(int argc, char** argv) {
         {13, 14, 15, 11}
     };
 
-    double local_result = 0.0;
+    double localResult = 0.0;
 
     // Процессы с рангом от 1 до 8 вычисляют свои произведения
-    if (rank > 0 && rank <= 8) {
-        local_result = diagonal_product(matrix, rank - 1);
+    switch (rank) {
+        case 1: {
+            localResult = getDeterminant1(matrix);
+            break;
+        }
+        case 2: {
+            localResult = getDeterminant2(matrix);
+            break;
+        }
+        case 3: {
+            localResult = getDeterminant3(matrix);
+            break;
+        }
+        case 4: {
+            localResult = getDeterminant4(matrix);
+            break;
+        }
     }
 
     // Главный процесс собирает результаты от остальных процессов
-    double global_results[9] = { 0 };
-    MPI_Gather(&local_result, 1, MPI_DOUBLE, global_results, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    double globalResults[5] = { 0 };
+    MPI_Gather(&localResult, 1, MPI_DOUBLE, globalResults, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
     // Главный процесс вычисляет итоговый определитель
     if (rank == 0) {
-        double determinant = 0.0;
-        determinant = (global_results[1] + global_results[2] + global_results[3] + global_results[4]) -
-            (global_results[5] + global_results[6] + global_results[7] + global_results[8]);
-        cout << "first " << (global_results[0] + global_results[1] + global_results[2] + global_results[3]) << endl;
-        cout << "second " << (global_results[4] + global_results[5] + global_results[6] + global_results[7]) << endl;
+        double determinant = globalResults[1] + globalResults[2] + globalResults[3] + globalResults[4];
+        cout << "Determinant submatrix 1: " << globalResults[1] << endl;
+        cout << "Determinant submatrix 2: " << globalResults[2] << endl;
+        cout << "Determinant submatrix 3: " << globalResults[3] << endl;
+        cout << "Determinant submatrix 4: " << globalResults[4] << endl;
         cout << "Determinant: " << determinant << endl;
     }
 
