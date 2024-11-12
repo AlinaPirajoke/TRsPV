@@ -1,8 +1,9 @@
 ﻿#include "1st_lab.cpp"
+#include "2nd_lab.cpp"
 #include "1st_lab_def_1.cpp"
 
 using namespace std;
-const int CURRENT_LAB = 101;
+const int CURRENT_LAB = 2;
 
 int main(int argc, char** argv) {
 	switch (CURRENT_LAB)
@@ -13,6 +14,10 @@ int main(int argc, char** argv) {
 	}
 	case 101: {
 		lab_1st_def_1(argc, argv);
+		break;
+	}
+	case 2: {
+		lab_2nd(argc, argv);
 		break;
 	}
 	default:
