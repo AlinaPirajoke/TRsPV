@@ -3,8 +3,8 @@
 #include <vector>
 
 using namespace std;
+const int N = 4;
 
-// Функция для вычисления произведения элементов в одной из диагоналей
 static double diagonalProduct(double matrix[3][3], int i) {
     double product = 1.0;
     if (i < 3) {
@@ -17,68 +17,50 @@ static double diagonalProduct(double matrix[3][3], int i) {
     return product;
 }
 
-//  Я называю это кибер преступностью
-static double getDeterminant1(double m[4][4]) {
-    double k = m[0][0];
+static void printMatrix(double matrix[N - 1][N - 1]) {
+    for (int i = 0; i < N - 1; i++) {
+        for (int j = 0; j < N - 1; j++) {
+            cout<< matrix[i][j]<<" ";
+        }
+        cout << "\n";
+    }
+    cout << endl;
+}
+
+static double getDeterminant(double m[3][3], double k) {
     double determinant = 0.0;
-    double newMatrix[3][3] = {
-            {m[1][1], m[1][2], m[1][3]},
-            {m[2][1], m[2][2], m[2][3]},
-            {m[3][1], m[3][2], m[3][3]}
-    };
 
     for (int i = 0; i < 6; i++) {
-        determinant += diagonalProduct(newMatrix, i);
+        determinant += diagonalProduct(m, i);
     }
     determinant *= k;
     return determinant;
 }
 
-static double getDeterminant2(double m[4][4]) {
-    double k = m[0][1];
-    double determinant = 0.0;
-    double newMatrix[3][3] = {
-            {m[1][0], m[1][2], m[1][3]},
-            {m[2][0], m[2][2], m[2][3]},
-            {m[3][0], m[3][2], m[3][3]}
-    };
+static void getSubmatrix(double matrix[N][N], int i, int j, double submatrix[N - 1][N - 1]) {
+    int row = 0, col = 0;
 
-    for (int i = 0; i < 6; i++) {
-        determinant += diagonalProduct(newMatrix, i);
+    for (int m = 0; m < N; m++) {
+        if (m == i) continue;
+
+        col = 0;
+        for (int n = 0; n < N; n++) {
+            if (n == j) continue;
+
+            submatrix[row][col] = matrix[m][n];
+            col++;
+        }
+        row++;
     }
-    return determinant *= -1 * k;
 }
 
-static double getDeterminant3(double m[4][4]) {
-    double k = m[0][2];
-    double determinant = 0.0;
-    double newMatrix[3][3] = {
-            {m[1][0], m[1][1], m[1][3]},
-            {m[2][0], m[2][1], m[2][3]},
-            {m[3][0], m[3][1], m[3][3]}
-    };
-
-    for (int i = 0; i < 6; i++) {
-        determinant += diagonalProduct(newMatrix, i);
-    }
-    determinant *= k;
-    return determinant;
+static void printReady(int rank) {
+    cout << "Procces "<<rank<< " ready" << endl;
 }
 
-static double getDeterminant4(double m[4][4]) {
-    double k = m[0][0];
-    double determinant = 0.0;
-    double newMatrix[3][3] = {
-            {m[1][0], m[1][1], m[1][2]},
-            {m[2][0], m[2][1], m[2][2]},
-            {m[3][0], m[3][1], m[3][2]}
-    };
-
-    for (int i = 0; i < 6; i++) {
-        determinant += diagonalProduct(newMatrix, i);
-    }
-    determinant *= k;
-    return determinant;
+static void printRecived(int rank, double matrix[N - 1][N - 1]) {
+    cout << "Procces " << rank << " recived matrix:\n";
+    printMatrix(matrix);
 }
 
 static int lab_1st(int argc, char** argv) {
@@ -96,41 +78,81 @@ static int lab_1st(int argc, char** argv) {
         return 1;
     }
 
-    // Исходная матрица 4x4
     double matrix[4][4] = {
         {1, 2, 3, 4},
         {5, 7, 7, 8},
         {9, 9, 11, 12},
         {13, 14, 15, 11}
     };
-
+    double subMatrix[3][3] = {};
     double localResult = 0.0;
 
-    // Процессы с рангом от 1 до 8 вычисляют свои произведения
     switch (rank) {
+        case 0: {
+            for (int i = 0; i < size-1; i++) {
+                //getSubmatrix(matrix, 0, i, subMatrix);
+                int j = 0;
+                int row = 0, col = 0;
+
+                for (int m = 0; m < N; m++) {
+                    if (m == i) continue;
+
+                    col = 0;
+                    for (int n = 0; n < N; n++) {
+                        if (n == j) continue;
+
+                        subMatrix[row][col] = matrix[m][n];
+                        col++;
+                    }
+                    row++;
+                }
+                
+                MPI_Send(subMatrix, 9, MPI_DOUBLE, i+1, 123, MPI_COMM_WORLD);
+            
+            }
+            break;
+        }
         case 1: {
-            localResult = getDeterminant1(matrix);
+            double localMatrix[3][3] = {};
+            double k = matrix[0][0];
+            MPI_Status status;
+            MPI_Recv(localMatrix, 9, MPI_DOUBLE, 0, 123, MPI_COMM_WORLD, &status);
+            printRecived(rank, localMatrix);
+            localResult = getDeterminant(localMatrix, k);
             break;
         }
         case 2: {
-            localResult = getDeterminant2(matrix);
+            double localMatrix[3][3] = {};
+            double k = matrix[0][1];
+            MPI_Status status;
+            MPI_Recv(localMatrix, 9, MPI_DOUBLE, 0, 123, MPI_COMM_WORLD, &status);
+            printRecived(rank, localMatrix);
+            localResult = getDeterminant(localMatrix, k);
             break;
         }
         case 3: {
-            localResult = getDeterminant3(matrix);
+            double localMatrix[3][3] = {};
+            double k = matrix[0][2];
+            MPI_Status status;
+            MPI_Recv(localMatrix, 9, MPI_DOUBLE, 0, 123, MPI_COMM_WORLD, &status);
+            printRecived(rank, localMatrix);
+            localResult = getDeterminant(localMatrix, k);
             break;
         }
         case 4: {
-            localResult = getDeterminant4(matrix);
+            double localMatrix[3][3] = {};
+            double k = matrix[0][3];
+            MPI_Status status;
+            MPI_Recv(localMatrix, 9, MPI_DOUBLE, 0, 123, MPI_COMM_WORLD, &status);
+            printRecived(rank, localMatrix);
+            localResult = getDeterminant(localMatrix, k);
             break;
         }
     }
 
-    // Главный процесс собирает результаты от остальных процессов
     double globalResults[5] = { 0 };
     MPI_Gather(&localResult, 1, MPI_DOUBLE, globalResults, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-    // Главный процесс вычисляет итоговый определитель
     if (rank == 0) {
         double determinant = globalResults[1] + globalResults[2] + globalResults[3] + globalResults[4];
         cout << "Determinant submatrix 1: " << globalResults[1] << endl;

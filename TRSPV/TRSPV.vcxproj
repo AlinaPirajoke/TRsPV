@@ -135,7 +135,9 @@
   <ItemGroup>
     <ClCompile Include="1st_lab.cpp" />
     <ClCompile Include="1st_lab_def_1.cpp" />
+    <ClCompile Include="1st_lab_def_2.cpp" />
     <ClCompile Include="TRSPV.cpp" />
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
