@@ -50,7 +50,7 @@ static int lab_2nd(int argc, char** argv) {
     int localB[colsA][colsB];
     int localC[2][colsB] = { {0} };
 
-    if (rank == ROOT) {
+    /*if (rank == ROOT) {
         for (int i = 0; i < 4; i++) {
             if (i == ROOT) {
                 std::copy(&A[i * 2][0], &A[i * 2][0] + 2 * colsA, &localA[0][0]);
@@ -62,7 +62,9 @@ static int lab_2nd(int argc, char** argv) {
     }
     else {
         MPI_Recv(localA, 2 * colsA, MPI_INT, ROOT, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    }
+    }*/
+
+    MPI_Scatter(A, 2*colsA, MPI_INT, localA, 2 * colsA, MPI_INT, ROOT, MPI_COMM_WORLD);
 
     MPI_Bcast(B, rowsB * colsB, MPI_INT, ROOT, MPI_COMM_WORLD);
 
