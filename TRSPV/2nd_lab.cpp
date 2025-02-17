@@ -49,7 +49,21 @@ static int lab_2nd(int argc, char** argv) {
     int localA[2][colsA];
     int localC[2][colsB] = { {0} };
 
-    MPI_Scatter(A, colsA * 2, MPI_INT, localA, colsA * 2, MPI_INT, ROOT, MPI_COMM_WORLD);
+    /*if (rank == ROOT) {
+        for (int i = 0; i < 4; i++) {
+            if (i == ROOT) {
+                std::copy(&A[i * 2][0], &A[i * 2][0] + 2 * colsA, &localA[0][0]);
+            }
+            else {
+                MPI_Send(&A[i * 2][0], 2 * colsA, MPI_INT, i, 0, MPI_COMM_WORLD);
+            }
+        }
+    }
+    else {
+        MPI_Recv(localA, 2 * colsA, MPI_INT, ROOT, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    }*/
+
+    MPI_Scatter(A, 2*colsA, MPI_INT, localA, 2 * colsA, MPI_INT, ROOT, MPI_COMM_WORLD);
 
     MPI_Bcast(B, rowsB * colsB, MPI_INT, ROOT, MPI_COMM_WORLD);
 
